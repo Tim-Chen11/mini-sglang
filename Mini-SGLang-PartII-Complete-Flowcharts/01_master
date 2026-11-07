@@ -1,0 +1,217 @@
+digraph master {
+	bgcolor="#F9FBFF" compound=true fontcolor="#132238" fontname="Noto Sans CJK SC" fontsize=26 fontweight=bold label="总图 · 一个请求穿过 Mini-SGLang 的完整生命周期（第 1–10 章）" labelloc=t nodesep=0.25 outputorder=edgesfirst pad=0.32 rankdir=LR ranksep=0.45 splines=spline
+	node [color="#64748B" fontcolor="#1E293B" fontname="Noto Sans CJK SC" fontsize=15 margin="0.18,0.13" penwidth=1.45 shape=box style="rounded,filled"]
+	edge [arrowsize=0.78 color="#94A3B8" fontcolor="#475569" fontname="Noto Sans CJK SC" fontsize=12 penwidth=1.6]
+	subgraph cluster_startup {
+		color="#AD4683" fillcolor="#FFFFFF" fontcolor="#AD4683" fontname="Noto Sans CJK SC" fontsize=19 label="  ① 启动与进程 [Ch1 / Ch9]  " labeljust=l labelloc=t margin=20 penwidth=1.5 style="rounded,filled"
+		boot [label="python -m minisgl
+模型、TP size、KV 配置" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC9%E7%AB%A0_%E5%A4%9A%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%BC%A0%E9%87%8F%E5%B9%B6%E8%A1%8C_%E4%BB%A3%E7%A0%81.md" color="#AD4683" fillcolor="#FCE7F3" shape=box target=_blank tooltip="python -m minisgl / 模型、TP size、KV 配置 | 第9章"]
+		spawn [label="spawn 子进程
+Scheduler/Engine × TP ranks
+Tokenizer × N + Detokenizer" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC9%E7%AB%A0_%E5%A4%9A%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%BC%A0%E9%87%8F%E5%B9%B6%E8%A1%8C_%E4%BB%A3%E7%A0%81.md" color="#AD4683" fillcolor="#FCE7F3" shape=box target=_blank tooltip="spawn 子进程 / Scheduler/Engine × TP ranks / Tokenizer × N + Detokenizer | 第9章"]
+		weights [label="GPU 上加载权重分片
+初始化 Gloo / PyNCCL
+准备 KV Pool / Page Table" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC9%E7%AB%A0_%E5%A4%9A%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%BC%A0%E9%87%8F%E5%B9%B6%E8%A1%8C_%E4%BB%A3%E7%A0%81.md" color="#AD4683" fillcolor="#FCE7F3" shape=box target=_blank tooltip="GPU 上加载权重分片 / 初始化 Gloo / PyNCCL / 准备 KV Pool / Page Table | 第9章"]
+		boot -> spawn [label="" color="#8293A9" penwidth=1.55]
+		spawn -> weights [label="" color="#8293A9" penwidth=1.55]
+	}
+	subgraph cluster_frontend {
+		color="#19669A" fillcolor="#FFFFFF" fontcolor="#19669A" fontname="Noto Sans CJK SC" fontsize=19 label="  ② HTTP / Tokenizer [Ch2 / Ch5]  " labeljust=l labelloc=t margin=20 penwidth=1.5 style="rounded,filled"
+		client [label="用户 POST
+/v1/chat/completions
+messages / params / stream" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC5%E7%AB%A0_HTTP%E6%9C%8D%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91_%E4%BB%A3%E7%A0%81.md" color="#19669A" fillcolor="#E6F3FF" shape=box target=_blank tooltip="用户 POST / /v1/chat/completions / messages / params / stream | 第5章"]
+		server [label="FastAPI + Pydantic 校验
+选择 Chat Template / prompt
+生成唯一 uid" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC5%E7%AB%A0_HTTP%E6%9C%8D%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91_%E4%BB%A3%E7%A0%81.md" color="#19669A" fillcolor="#E6F3FF" shape=box target=_blank tooltip="FastAPI + Pydantic 校验 / 选择 Chat Template / prompt / 生成唯一 uid | 第5章"]
+		front_map [label="FrontendManager
+ack_map[uid] / event_map[uid]
+建立异步请求状态" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC5%E7%AB%A0_HTTP%E6%9C%8D%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91_%E4%BB%A3%E7%A0%81.md" color="#19669A" fillcolor="#E6F3FF" shape=box target=_blank tooltip="FrontendManager / ack_map[uid] / event_map[uid] / 建立异步请求状态 | 第5章"]
+		tmsg [label="TokenizeMsg
+uid + 文本 + 采样参数" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC2%E7%AB%A0_%E4%B8%80%E4%B8%AA%E8%AF%B7%E6%B1%82%E7%9A%84%E6%97%85%E7%A8%8B_%E4%BB%A3%E7%A0%81.md" color="#19669A" fillcolor="#E6F3FF" shape=box target=_blank tooltip="TokenizeMsg / uid + 文本 + 采样参数 | 第2章"]
+		token [label="Tokenizer Worker
+Chat Template → input_ids" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC2%E7%AB%A0_%E4%B8%80%E4%B8%AA%E8%AF%B7%E6%B1%82%E7%9A%84%E6%97%85%E7%A8%8B_%E4%BB%A3%E7%A0%81.md" color="#19669A" fillcolor="#E6F3FF" shape=box target=_blank tooltip="Tokenizer Worker / Chat Template → input_ids | 第2章"]
+		umsg [label="UserMsg / BatchBackendMsg
+uid + IDs + SamplingParams" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC2%E7%AB%A0_%E4%B8%80%E4%B8%AA%E8%AF%B7%E6%B1%82%E7%9A%84%E6%97%85%E7%A8%8B_%E4%BB%A3%E7%A0%81.md" color="#19669A" fillcolor="#E6F3FF" shape=box target=_blank tooltip="UserMsg / BatchBackendMsg / uid + IDs + SamplingParams | 第2章"]
+		client -> server [label="" color="#8293A9" penwidth=1.55]
+		server -> front_map [label="" color="#8293A9" penwidth=1.55]
+		front_map -> tmsg [label="" color="#8293A9" penwidth=1.55]
+		tmsg -> token [label="" color="#8293A9" penwidth=1.55]
+		token -> umsg [label="" color="#8293A9" penwidth=1.55]
+	}
+	subgraph group_scheduler {
+		color="#6C44B1" fillcolor="#FFFFFF" fontcolor="#6C44B1" fontname="Noto Sans CJK SC" fontsize=19 label="  ③ Scheduler 持续迭代 [Ch2 / Ch6 / Ch9]  " labeljust=l labelloc=t margin=20 penwidth=1.5 style="rounded,filled"
+		scheduler_header [label="③ Scheduler 核心：调度 / 排队 / Batch" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#6C44B1" fillcolor="#F0EAFF" shape=box target=_blank tooltip="③ Scheduler 核心：调度 / 排队 / Batch | 第6章"]
+		scheduler_header -> rank0 [label="" color="#8293A9" penwidth=1.55 style=invis]
+		rank0 [label="TP rank0 接收消息
+同步广播至其他 ranks
+所有 rank 同步请求状态" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC9%E7%AB%A0_%E5%A4%9A%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%BC%A0%E9%87%8F%E5%B9%B6%E8%A1%8C_%E4%BB%A3%E7%A0%81.md" color="#AD4683" fillcolor="#FCE7F3" shape=box target=_blank tooltip="TP rank0 接收消息 / 同步广播至其他 ranks / 所有 rank 同步请求状态 | 第9章"]
+		state [label="_process_one_msg
+校验长度；登记 WAITING
+PrefillManager.pending_list" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#6C44B1" fillcolor="#F0EAFF" shape=box target=_blank tooltip="_process_one_msg / 校验长度；登记 WAITING / PrefillManager.pending_list | 第6章"]
+		loop [label="Scheduler.normal_loop / overlap_loop
+收消息 → 组批 → 执行 → 处理结果" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#6C44B1" fillcolor="#F0EAFF" shape=box target=_blank tooltip="Scheduler.normal_loop / overlap_loop / 收消息 → 组批 → 执行 → 处理结果 | 第6章"]
+		choice [label="_schedule_next_batch
+能安排 Prefill 吗？" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#A87910" fillcolor="#FFF6D5" shape=diamond target=_blank tooltip="_schedule_next_batch / 能安排 Prefill 吗？ | 第6章"]
+		pf [label="PrefillAdder
+新请求 + ChunkedReq
+匹配前缀 / 检查预算" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#6C44B1" fillcolor="#F0EAFF" shape=box target=_blank tooltip="PrefillAdder / 新请求 + ChunkedReq / 匹配前缀 / 检查预算 | 第6章"]
+		dc [label="DecodeManager
+运行请求可继续？
+动态挑选当前 batch" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#6C44B1" fillcolor="#F0EAFF" shape=box target=_blank tooltip="DecodeManager / 运行请求可继续？ / 动态挑选当前 batch | 第6章"]
+		no_work [label="无可运行 batch
+等待新消息或资源" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#64748B" fillcolor="#EDF2F7" shape=box target=_blank tooltip="无可运行 batch / 等待新消息或资源 | 第6章"]
+		make_batch [label="_prepare_batch
+Batch(phase, reqs)
+input_ids / positions / out_loc" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#6C44B1" fillcolor="#F0EAFF" shape=box target=_blank tooltip="_prepare_batch / Batch(phase, reqs) / input_ids / positions / out_loc | 第6章"]
+		rank0 -> state [label="" color="#8293A9" penwidth=1.55]
+		state -> loop [label="" color="#8293A9" penwidth=1.55]
+		loop -> choice [label="" color="#8293A9" penwidth=1.55]
+		choice -> pf [label="可" color="#6C44B1" penwidth=1.55]
+		choice -> dc [label="不可" color="#6C44B1" penwidth=1.55]
+		pf -> make_batch [label="组出 prefill batch" color="#8293A9" penwidth=1.55]
+		dc -> make_batch [label="组出 decode batch" color="#8293A9" penwidth=1.55]
+		dc -> no_work [label="没有" color="#8293A9" constraint=false penwidth=1.55]
+		no_work -> loop [label="" color="#8293A9" constraint=false penwidth=1.55 style=dashed]
+	}
+	subgraph cluster_memory {
+		color="#A65D13" fillcolor="#FFFFFF" fontcolor="#A65D13" fontname="Noto Sans CJK SC" fontsize=19 label="  ④ Prefill 复用 / KV 内存 [Ch4 / Ch7 / Ch8]  " labeljust=l labelloc=t margin=20 penwidth=1.5 style="rounded,filled"
+		prefix [label="RadixTree match_prefix
+最长相同 token 前缀
+输出 cached_len / handle" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC8%E7%AB%A0_RadixAttention%E4%B8%8E%E5%89%8D%E7%BC%80%E7%BC%93%E5%AD%98_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="RadixTree match_prefix / 最长相同 token 前缀 / 输出 cached_len / handle | 第8章"]
+		mem_gate [label="槽位 / prefill token 预算
+KV estimated_len + reserved_size
+是否足够？" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#A87910" fillcolor="#FFF6D5" shape=diamond target=_blank tooltip="槽位 / prefill token 预算 / KV estimated_len + reserved_size / 是否足够？ | 第6章"]
+		evict [label="空闲页不足：尝试逐出
+未锁定的可淘汰前缀
+否则本轮无法接入" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC8%E7%AB%A0_RadixAttention%E4%B8%8E%E5%89%8D%E7%BC%80%E7%BC%93%E5%AD%98_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="空闲页不足：尝试逐出 / 未锁定的可淘汰前缀 / 否则本轮无法接入 | 第8章"]
+		lock [label="Lock 命中前缀
+分配 request table row
+复制已缓存 slot 映射" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC8%E7%AB%A0_RadixAttention%E4%B8%8E%E5%89%8D%E7%BC%80%E7%BC%93%E5%AD%98_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="Lock 命中前缀 / 分配 request table row / 复制已缓存 slot 映射 | 第8章"]
+		alloc [label="CacheManager.allocate_paged
+为未缓存 token 分配物理页
+更新 page_table / out_loc" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC7%E7%AB%A0_PagedKVCache%E4%B8%8E%E6%98%BE%E5%AD%98%E7%AE%A1%E7%90%86.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="CacheManager.allocate_paged / 为未缓存 token 分配物理页 / 更新 page_table / out_loc | 第7章"]
+		meta [label="AttentionBackend.prepare_metadata
+逻辑位置 → 物理 page/slot
+cache_seqlens / causal mask" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC4%E7%AB%A0_KVCache%E4%BC%98%E5%8C%96_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="AttentionBackend.prepare_metadata / 逻辑位置 → 物理 page/slot / cache_seqlens / causal mask | 第4章"]
+		prefix -> mem_gate [label="" color="#8293A9" penwidth=1.55]
+		mem_gate -> evict [label="不足" color="#A65D13" penwidth=1.55]
+		evict -> mem_gate [label="再检查" color="#8293A9" constraint=false penwidth=1.55 style=dashed]
+		mem_gate -> lock [label="足够" color="#A65D13" penwidth=1.55]
+		lock -> alloc [label="" color="#8293A9" penwidth=1.55]
+		alloc -> meta [label="" color="#8293A9" penwidth=1.55]
+	}
+	subgraph cluster_forward {
+		color="#13855F" fillcolor="#FFFFFF" fontcolor="#13855F" fontname="Noto Sans CJK SC" fontsize=19 label="  ⑤ GPU Forward / TP [Ch3 / Ch4 / Ch9]  " labeljust=l labelloc=t margin=20 penwidth=1.5 style="rounded,filled"
+		enter [label="Engine.forward_batch
+Context.batch ← 当前 Batch
+Prefill: 多个未缓存 token
+Decode: 每请求通常 1 token" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC3%E7%AB%A0_%E5%89%8D%E5%90%91%E4%B8%8E%E7%94%9F%E6%88%90_%E4%BB%A3%E7%A0%81.md" color="#13855F" fillcolor="#E6F8EF" shape=box target=_blank tooltip="Engine.forward_batch / Context.batch ← 当前 Batch / Prefill: 多个未缓存 token / Decode: 每请求通常 1 token | 第3章"]
+		embed [label="Token Embedding + position
+各 Transformer Decoder Layers" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC3%E7%AB%A0_%E5%89%8D%E5%90%91%E4%B8%8E%E7%94%9F%E6%88%90_%E4%BB%A3%E7%A0%81.md" color="#13855F" fillcolor="#E6F8EF" shape=box target=_blank tooltip="Token Embedding + position / 各 Transformer Decoder Layers | 第3章"]
+		qkv [label="RMSNorm + QKV Projection
+QK Norm / RoPE / GQA
+TP: 切分 Head / 权重" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC9%E7%AB%A0_%E5%A4%9A%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%BC%A0%E9%87%8F%E5%B9%B6%E8%A1%8C_%E4%BB%A3%E7%A0%81.md" color="#13855F" fillcolor="#E6F8EF" shape=box target=_blank tooltip="RMSNorm + QKV Projection / QK Norm / RoPE / GQA / TP: 切分 Head / 权重 | 第9章"]
+		kvio [label="按 out_loc 写入本轮 K/V
+读 page_table 对应历史 KV
+Causal Attention" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC4%E7%AB%A0_KVCache%E4%BC%98%E5%8C%96_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="按 out_loc 写入本轮 K/V / 读 page_table 对应历史 KV / Causal Attention | 第4章"]
+		mlp [label="O Projection + Residual
+RMSNorm + Gated MLP
+TP Row Parallel → All-Reduce" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC9%E7%AB%A0_%E5%A4%9A%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%BC%A0%E9%87%8F%E5%B9%B6%E8%A1%8C_%E4%BB%A3%E7%A0%81.md" color="#13855F" fillcolor="#E6F8EF" shape=box target=_blank tooltip="O Projection + Residual / RMSNorm + Gated MLP / TP Row Parallel → All-Reduce | 第9章"]
+		logits [label="Final Norm + LM Head
+每请求最后位置 logits
+→ Sampler" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC3%E7%AB%A0_%E5%89%8D%E5%90%91%E4%B8%8E%E7%94%9F%E6%88%90_%E4%BB%A3%E7%A0%81.md" color="#13855F" fillcolor="#E6F8EF" shape=box target=_blank tooltip="Final Norm + LM Head / 每请求最后位置 logits / → Sampler | 第3章"]
+		enter -> embed [label="" color="#8293A9" penwidth=1.55]
+		embed -> qkv [label="" color="#8293A9" penwidth=1.55]
+		qkv -> kvio [label="" color="#8293A9" penwidth=1.55]
+		kvio -> mlp [label="" color="#8293A9" penwidth=1.55]
+		mlp -> logits [label="" color="#8293A9" penwidth=1.55]
+	}
+	subgraph cluster_result {
+		color="#00877B" fillcolor="#FFFFFF" fontcolor="#00877B" fontname="Noto Sans CJK SC" fontsize=19 label="  ⑥ 生成 / 更新 / 复用 [Ch6 / Ch8 / Ch10]  " labeljust=l labelloc=t margin=20 penwidth=1.5 style="rounded,filled"
+		spec_gate [label="仅 Decode 可选的扩展分支
+Speculative 替代常规 Forward+Sample
+mini-sglang 基线不包含" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC10%E7%AB%A0_%E6%8A%95%E6%9C%BA%E8%A7%A3%E7%A0%81_%E4%BB%A3%E7%A0%81.md" color="#A87910" fillcolor="#FFF6D5" shape=diamond target=_blank tooltip="仅 Decode 可选的扩展分支 / Speculative 替代常规 Forward+Sample / mini-sglang 基线不包含 | 第10章"]
+		normal_sample [label="Normal sampler
+Temperature / Top-k / Top-p
+生成 1 个下一 token" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC3%E7%AB%A0_%E5%89%8D%E5%90%91%E4%B8%8E%E7%94%9F%E6%88%90_%E4%BB%A3%E7%A0%81.md" color="#13855F" fillcolor="#E6F8EF" shape=box target=_blank tooltip="Normal sampler / Temperature / Top-k / Top-p / 生成 1 个下一 token | 第3章"]
+		spec_draft [label="Draft k 个候选
+Target 一次验证
+连续接受 + 纠正/bonus" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC10%E7%AB%A0_%E6%8A%95%E6%9C%BA%E8%A7%A3%E7%A0%81_%E4%BB%A3%E7%A0%81.md" color="#00877B" fillcolor="#DCF6F2" shape=box target=_blank tooltip="Draft k 个候选 / Target 一次验证 / 连续接受 + 纠正/bonus | 第10章"]
+		prefill_chunk [label="本轮是未完成的 Chunked Prefill？
+若是，仅写 KV；不采样输出" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#A87910" fillcolor="#FFF6D5" shape=diamond target=_blank tooltip="本轮是未完成的 Chunked Prefill？ / 若是，仅写 KV；不采样输出 | 第6章"]
+		write [label="Req.append_host(output token)
+正式提交生成的 token(s)
+更新长度与请求状态" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#6C44B1" fillcolor="#F0EAFF" shape=box target=_blank tooltip="Req.append_host(output token) / 正式提交生成的 token(s) / 更新长度与请求状态 | 第6章"]
+		stop [label="达到 max_tokens?
+EOS 且非 ignore_eos？" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#A87910" fillcolor="#FFF6D5" shape=diamond target=_blank tooltip="达到 max_tokens? / EOS 且非 ignore_eos？ | 第6章"]
+		keep [label="未结束：留在 running 集合
+下一轮 Decode / 接收新请求" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#6C44B1" fillcolor="#F0EAFF" shape=box target=_blank tooltip="未结束：留在 running 集合 / 下一轮 Decode / 接收新请求 | 第6章"]
+		recycle [label="已结束/Abort：
+移除 waiting/running
+释放 table row 与 KV handle" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC8%E7%AB%A0_RadixAttention%E4%B8%8E%E5%89%8D%E7%BC%80%E7%BC%93%E5%AD%98_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="已结束/Abort： / 移除 waiting/running / 释放 table row 与 KV handle | 第8章"]
+		persist [label="cache_req / insert_prefix
+保留可复用完整前缀
+解锁 / 归还其余页面" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC8%E7%AB%A0_RadixAttention%E4%B8%8E%E5%89%8D%E7%BC%80%E7%BC%93%E5%AD%98_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="cache_req / insert_prefix / 保留可复用完整前缀 / 解锁 / 归还其余页面 | 第8章"]
+		spec_gate -> spec_draft [label="是：扩展路径" color="#8293A9" penwidth=1.55]
+		prefill_chunk -> normal_sample [label="否：正常采样" color="#8293A9" penwidth=1.55]
+		normal_sample -> write [label="" color="#8293A9" penwidth=1.55]
+		spec_draft -> write [label="验证通过后提交" color="#8293A9" penwidth=1.55]
+		write -> stop [label="" color="#8293A9" penwidth=1.55]
+		stop -> keep [label="否" color="#8293A9" penwidth=1.55]
+		stop -> recycle [label="是" color="#8293A9" penwidth=1.55]
+		recycle -> persist [label="" color="#8293A9" penwidth=1.55]
+	}
+	subgraph cluster_response {
+		color="#19669A" fillcolor="#FFFFFF" fontcolor="#19669A" fontname="Noto Sans CJK SC" fontsize=19 label="  ⑦ 逐 token 返回客户端 [Ch2 / Ch5]  " labeljust=l labelloc=t margin=20 penwidth=1.5 style="rounded,filled"
+		dmsg [label="DetokenizeMsg
+uid + next_token + finished" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC2%E7%AB%A0_%E4%B8%80%E4%B8%AA%E8%AF%B7%E6%B1%82%E7%9A%84%E6%97%85%E7%A8%8B_%E4%BB%A3%E7%A0%81.md" color="#19669A" fillcolor="#E6F3FF" shape=box target=_blank tooltip="DetokenizeMsg / uid + next_token + finished | 第2章"]
+		detok [label="Detokenizer Worker
+增量解码 UTF-8 / token IDs
+UserReply(uid, delta, finished)" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC5%E7%AB%A0_HTTP%E6%9C%8D%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91_%E4%BB%A3%E7%A0%81.md" color="#19669A" fillcolor="#E6F3FF" shape=box target=_blank tooltip="Detokenizer Worker / 增量解码 UTF-8 / token IDs / UserReply(uid, delta, finished) | 第5章"]
+		listener [label="API listen()
+按 uid 写 ack_map[uid]
+设置 event_map[uid] 唤醒" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC5%E7%AB%A0_HTTP%E6%9C%8D%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91_%E4%BB%A3%E7%A0%81.md" color="#19669A" fillcolor="#E6F3FF" shape=box target=_blank tooltip="API listen() / 按 uid 写 ack_map[uid] / 设置 event_map[uid] 唤醒 | 第5章"]
+		mode [label="HTTP stream == true ?" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC5%E7%AB%A0_HTTP%E6%9C%8D%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91_%E4%BB%A3%E7%A0%81.md" color="#A87910" fillcolor="#FFF6D5" shape=diamond target=_blank tooltip="HTTP stream == true ? | 第5章"]
+		sse [label="StreamingResponse SSE
+data: delta.content
+最终 data: [DONE]" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC5%E7%AB%A0_HTTP%E6%9C%8D%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91_%E4%BB%A3%E7%A0%81.md" color="#19669A" fillcolor="#E6F3FF" shape=box target=_blank tooltip="StreamingResponse SSE / data: delta.content / 最终 data: [DONE] | 第5章"]
+		json [label="收集完整文本
+返回完整 JSON Response" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC5%E7%AB%A0_HTTP%E6%9C%8D%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91_%E4%BB%A3%E7%A0%81.md" color="#19669A" fillcolor="#E6F3FF" shape=box target=_blank tooltip="收集完整文本 / 返回完整 JSON Response | 第5章"]
+		done [label="客户端看到增量文本
+或最终回答" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC5%E7%AB%A0_HTTP%E6%9C%8D%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91_%E4%BB%A3%E7%A0%81.md" color="#19669A" fillcolor="#E6F3FF" shape=box target=_blank tooltip="客户端看到增量文本 / 或最终回答 | 第5章"]
+		dmsg -> detok [label="" color="#8293A9" penwidth=1.55]
+		detok -> listener [label="" color="#8293A9" penwidth=1.55]
+		listener -> mode [label="" color="#8293A9" penwidth=1.55]
+		mode -> sse [label="是" color="#8293A9" penwidth=1.55]
+		mode -> json [label="否" color="#8293A9" penwidth=1.55]
+		sse -> done [label="" color="#8293A9" penwidth=1.55]
+		json -> done [label="" color="#8293A9" penwidth=1.55]
+	}
+	subgraph cluster_abort {
+		color="#B83333" fillcolor="#FFFFFF" fontcolor="#B83333" fontname="Noto Sans CJK SC" fontsize=19 label="  ⑧ 并发取消与清理 [Ch5 / Ch6]  " labeljust=l labelloc=t margin=20 penwidth=1.5 style="rounded,filled"
+		disconnect [label="连接断开 / async cancel" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC5%E7%AB%A0_HTTP%E6%9C%8D%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91_%E4%BB%A3%E7%A0%81.md" color="#B83333" fillcolor="#FFEAE9" shape=box target=_blank tooltip="连接断开 / async cancel | 第5章"]
+		abmsg [label="API 清除 per-uid 状态
+AbortMsg → Tokenizer
+AbortBackendMsg → Scheduler" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC5%E7%AB%A0_HTTP%E6%9C%8D%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91_%E4%BB%A3%E7%A0%81.md" color="#B83333" fillcolor="#FFEAE9" shape=box target=_blank tooltip="API 清除 per-uid 状态 / AbortMsg → Tokenizer / AbortBackendMsg → Scheduler | 第5章"]
+		abort_sched [label="按 uid 从 pending / running 移除
+已在 GPU 的工作可有迟到回复
+调用统一资源释放路径" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#B83333" fillcolor="#FFEAE9" shape=box target=_blank tooltip="按 uid 从 pending / running 移除 / 已在 GPU 的工作可有迟到回复 / 调用统一资源释放路径 | 第6章"]
+		disconnect -> abmsg [label="" color="#8293A9" penwidth=1.55]
+		abmsg -> abort_sched [label="" color="#8293A9" penwidth=1.55]
+	}
+	weights -> client [label="" color="#64748B" penwidth=2.15]
+	umsg -> rank0 [label="" color="#64748B" penwidth=2.15]
+	make_batch -> alloc [label="" color="#64748B" penwidth=2.15]
+	meta -> enter [label="" color="#64748B" penwidth=2.15]
+	logits -> prefill_chunk [label="" color="#64748B" penwidth=2.15]
+	stop -> dmsg [label="" color="#64748B" penwidth=2.15]
+	pf -> prefix [label="" color="#A65D13" constraint=false penwidth=1.55 style=dashed]
+	make_batch -> spec_gate [label="可选投机旁路" color="#00877B" constraint=false penwidth=1.55 style=dotted]
+	mem_gate -> pf [label="无法接入：留队列" color="#8293A9" constraint=false penwidth=1.55 style=dotted]
+	prefill_chunk -> loop [label="是：下轮继续 prefill" color="#6C44B1" constraint=false penwidth=1.55 style=dashed]
+	keep -> loop [label="下一轮继续" color="#6C44B1" constraint=false penwidth=1.55 style=dashed]
+	persist -> loop [label="资源腾出，继续调度" color="#A65D13" constraint=false penwidth=1.55 style=dotted]
+	client -> disconnect [label="用户中途离开" color="#B83333" constraint=false penwidth=1.55 style=dashed]
+	abort_sched -> recycle [label="" color="#B83333" constraint=false penwidth=1.55 style=dashed]
+	recycle -> dmsg [label="若需发送最终状态" color="#8293A9" constraint=false penwidth=1.55 style=dotted]
+}

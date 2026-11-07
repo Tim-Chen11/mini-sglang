@@ -1,0 +1,100 @@
+digraph kv {
+	bgcolor="#F9FBFF" compound=true fontcolor="#132238" fontname="Noto Sans CJK SC" fontsize=26 fontweight=bold label="详图 C · KV Cache 的 3 种对象：Pool ≠ Page Table ≠ Radix Tree（Ch4 / 7 / 8）" labelloc=t nodesep=0.32 outputorder=edgesfirst pad=0.32 rankdir=LR ranksep=0.56 splines=spline
+	node [color="#64748B" fontcolor="#1E293B" fontname="Noto Sans CJK SC" fontsize=17 margin="0.18,0.13" penwidth=1.45 shape=box style="rounded,filled"]
+	edge [arrowsize=0.78 color="#94A3B8" fontcolor="#475569" fontname="Noto Sans CJK SC" fontsize=12 penwidth=1.6]
+	subgraph cluster_reference {
+		color="#A65D13" fillcolor="#FFFFFF" fontcolor="#A65D13" fontname="Noto Sans CJK SC" fontsize=19 label="  新请求：前缀命中 / 分配  " labeljust=l labelloc=t margin=20 penwidth=1.5 style="rounded,filled"
+		k0 [label="input_ids = [A,B,C,D,E]
+本请求已有哪些 token？" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC4%E7%AB%A0_KVCache%E4%BC%98%E5%8C%96_%E4%BB%A3%E7%A0%81.md" color="#19669A" fillcolor="#E6F3FF" shape=box target=_blank tooltip="input_ids = [A,B,C,D,E] / 本请求已有哪些 token？ | 第4章"]
+		k1 [label="RadixTree longest-prefix match
+命中已存的 [A,B,C]
+匹配按 page_size 对齐" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC8%E7%AB%A0_RadixAttention%E4%B8%8E%E5%89%8D%E7%BC%80%E7%BC%93%E5%AD%98_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="RadixTree longest-prefix match / 命中已存的 [A,B,C] / 匹配按 page_size 对齐 | 第8章"]
+		k2 [label="CacheHandle(cached_len,node)
+收集命中节点的物理 slot indices" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC8%E7%AB%A0_RadixAttention%E4%B8%8E%E5%89%8D%E7%BC%80%E7%BC%93%E5%AD%98_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="CacheHandle(cached_len,node) / 收集命中节点的物理 slot indices | 第8章"]
+		k3 [label="锁住匹配的前缀节点
+避免正在使用时被 LRU 淘汰" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC8%E7%AB%A0_RadixAttention%E4%B8%8E%E5%89%8D%E7%BC%80%E7%BC%93%E5%AD%98_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="锁住匹配的前缀节点 / 避免正在使用时被 LRU 淘汰 | 第8章"]
+		k4 [label="TableManager.allocate
+分配当前 Req 的 page_table row" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC7%E7%AB%A0_PagedKVCache%E4%B8%8E%E6%98%BE%E5%AD%98%E7%AE%A1%E7%90%86.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="TableManager.allocate / 分配当前 Req 的 page_table row | 第7章"]
+		k5 [label="复制命中段的 slot indices
+未命中段需要新 page" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC4%E7%AB%A0_KVCache%E4%BC%98%E5%8C%96_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="复制命中段的 slot indices / 未命中段需要新 page | 第4章"]
+		k0 -> k1 [label="" color="#8293A9" penwidth=1.55]
+		k1 -> k2 [label="" color="#8293A9" penwidth=1.55]
+		k2 -> k3 [label="" color="#8293A9" penwidth=1.55]
+		k3 -> k4 [label="" color="#8293A9" penwidth=1.55]
+		k4 -> k5 [label="" color="#8293A9" penwidth=1.55]
+	}
+	subgraph cluster_phys {
+		color="#A65D13" fillcolor="#FFFFFF" fontcolor="#A65D13" fontname="Noto Sans CJK SC" fontsize=19 label="  物理内存：Pool + Free Pages  " labeljust=l labelloc=t margin=20 penwidth=1.5 style="rounded,filled"
+		f0 [label="KV Cache Pool（真实 GPU 张量）
+每层 K_buffer / V_buffer
+[pages, page_size, local_kv_heads, dim]" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC4%E7%AB%A0_KVCache%E4%BC%98%E5%8C%96_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="KV Cache Pool（真实 GPU 张量） / 每层 K_buffer / V_buffer / [pages, page_size, local_kv_heads, dim] | 第4章"]
+		f1 [label="free_slots：空闲物理页起始 slot
+例：page_size=4, [0,4,8,12]" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC7%E7%AB%A0_PagedKVCache%E4%B8%8E%E6%98%BE%E5%AD%98%E7%AE%A1%E7%90%86.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="free_slots：空闲物理页起始 slot / 例：page_size=4, [0,4,8,12] | 第7章"]
+		f2 [label="KV 页容量不够？" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC7%E7%AB%A0_PagedKVCache%E4%B8%8E%E6%98%BE%E5%AD%98%E7%AE%A1%E7%90%86.md" color="#A87910" fillcolor="#FFF6D5" shape=diamond target=_blank tooltip="KV 页容量不够？ | 第7章"]
+		f3 [label="RadixCache.evict()
+逐出未锁定的 LRU 叶子前缀
+其物理页重新进入 free_slots" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC8%E7%AB%A0_RadixAttention%E4%B8%8E%E5%89%8D%E7%BC%80%E7%BC%93%E5%AD%98_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="RadixCache.evict() / 逐出未锁定的 LRU 叶子前缀 / 其物理页重新进入 free_slots | 第8章"]
+		f4 [label="allocate_paged → 物理页
+把每页展开为 token slot
+写到 batch.out_loc" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC7%E7%AB%A0_PagedKVCache%E4%B8%8E%E6%98%BE%E5%AD%98%E7%AE%A1%E7%90%86.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="allocate_paged → 物理页 / 把每页展开为 token slot / 写到 batch.out_loc | 第7章"]
+		f5 [label="一个 layer 的 store_kv
+(indices = batch.out_loc)
+写入本轮新 K/V" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC4%E7%AB%A0_KVCache%E4%BC%98%E5%8C%96_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="一个 layer 的 store_kv / (indices = batch.out_loc) / 写入本轮新 K/V | 第4章"]
+		f1 -> f2 [label="" color="#8293A9" penwidth=1.55]
+		f2 -> f3 [label="是" color="#8293A9" penwidth=1.55]
+		f3 -> f4 [label="" color="#8293A9" penwidth=1.55]
+		f2 -> f4 [label="否" color="#8293A9" penwidth=1.55]
+		f4 -> f5 [label="" color="#8293A9" penwidth=1.55]
+		f5 -> f0 [label="" color="#8293A9" penwidth=1.55]
+	}
+	subgraph cluster_mapping {
+		color="#A65D13" fillcolor="#FFFFFF" fontcolor="#A65D13" fontname="Noto Sans CJK SC" fontsize=19 label="  Page Table：逻辑位置 → 物理 token slot  " labeljust=l labelloc=t margin=20 penwidth=1.5 style="rounded,filled"
+		t0 [label="page_table[table_idx, position]
+存的是物理 token slot
+不是原始 page ID" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC4%E7%AB%A0_KVCache%E4%BC%98%E5%8C%96_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="page_table[table_idx, position] / 存的是物理 token slot / 不是原始 page ID | 第4章"]
+		t1 [label="实例（page_size=4）
+请求逻辑位置 [0 1 2 3 4]
+物理 slots [8 9 10 11 20]" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC7%E7%AB%A0_PagedKVCache%E4%B8%8E%E6%98%BE%E5%AD%98%E7%AE%A1%E7%90%86.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="实例（page_size=4） / 请求逻辑位置 [0 1 2 3 4] / 物理 slots [8 9 10 11 20] | 第7章"]
+		t2 [label="Attention Backend.prepare_metadata
+转换为 kernel 需要的物理 Page IDs
++ cache_seqlens + causal info" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC4%E7%AB%A0_KVCache%E4%BC%98%E5%8C%96_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="Attention Backend.prepare_metadata / 转换为 kernel 需要的物理 Page IDs / + cache_seqlens + causal info | 第4章"]
+		t3 [label="Attention: Q 当前 token
+按 page_table 读取可见历史 K/V
+在线 Softmax / FlashAttention" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC4%E7%AB%A0_KVCache%E4%BC%98%E5%8C%96_%E4%BB%A3%E7%A0%81.md" color="#13855F" fillcolor="#E6F8EF" shape=box target=_blank tooltip="Attention: Q 当前 token / 按 page_table 读取可见历史 K/V / 在线 Softmax / FlashAttention | 第4章"]
+		t0 -> t1 [label="" color="#8293A9" penwidth=1.55]
+		t1 -> t2 [label="" color="#8293A9" penwidth=1.55]
+		t2 -> t3 [label="" color="#8293A9" penwidth=1.55]
+	}
+	subgraph cluster_return {
+		color="#A65D13" fillcolor="#FFFFFF" fontcolor="#A65D13" fontname="Noto Sans CJK SC" fontsize=19 label="  结果完成 → 前缀插入 / 回收  " labeljust=l labelloc=t margin=20 penwidth=1.5 style="rounded,filled"
+		r0 [label="Prefill 完成非 chunk
+cache_req(finished=False)
+登记已计算前缀，保留 handle" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC8%E7%AB%A0_RadixAttention%E4%B8%8E%E5%89%8D%E7%BC%80%E7%BC%93%E5%AD%98_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="Prefill 完成非 chunk / cache_req(finished=False) / 登记已计算前缀，保留 handle | 第8章"]
+		r1 [label="Decode 若生成 1 token
+扩展 request page_table
+本轮不会每次插入 RadixTree" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC8%E7%AB%A0_RadixAttention%E4%B8%8E%E5%89%8D%E7%BC%80%E7%BC%93%E5%AD%98_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="Decode 若生成 1 token / 扩展 request page_table / 本轮不会每次插入 RadixTree | 第8章"]
+		r2 [label="Finished / Cancelled
+_free_req_resources()
+TableManager.free(table_idx)" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC8%E7%AB%A0_RadixAttention%E4%B8%8E%E5%89%8D%E7%BC%80%E7%BC%93%E5%AD%98_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="Finished / Cancelled / _free_req_resources() / TableManager.free(table_idx) | 第8章"]
+		r3 [label="cache_req(finished=True)
+insert_prefix + unlock(old_handle)
+可复用完整页保留在树中" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC8%E7%AB%A0_RadixAttention%E4%B8%8E%E5%89%8D%E7%BC%80%E7%BC%93%E5%AD%98_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="cache_req(finished=True) / insert_prefix + unlock(old_handle) / 可复用完整页保留在树中 | 第8章"]
+		r4 [label="多余 / 重复 / 非整页尾部
+归还 free_slots（无需把显存清零）" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC8%E7%AB%A0_RadixAttention%E4%B8%8E%E5%89%8D%E7%BC%80%E7%BC%93%E5%AD%98_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="多余 / 重复 / 非整页尾部 / 归还 free_slots（无需把显存清零） | 第8章"]
+		r5 [label="未来用户命中同样前缀
+避免重新计算其 K/V
+降低 Prefill TTFT" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC8%E7%AB%A0_RadixAttention%E4%B8%8E%E5%89%8D%E7%BC%80%E7%BC%93%E5%AD%98_%E4%BB%A3%E7%A0%81.md" color="#13855F" fillcolor="#E6F8EF" shape=box target=_blank tooltip="未来用户命中同样前缀 / 避免重新计算其 K/V / 降低 Prefill TTFT | 第8章"]
+		r0 -> r1 [label="" color="#8293A9" penwidth=1.55]
+		r1 -> r2 [label="" color="#8293A9" penwidth=1.55]
+		r2 -> r3 [label="" color="#8293A9" penwidth=1.55]
+		r3 -> r4 [label="" color="#8293A9" penwidth=1.55]
+		r3 -> r5 [label="" color="#8293A9" penwidth=1.55]
+	}
+	k5 -> f1 [label="" color="#8293A9" constraint=true penwidth=1.55 style=solid]
+	k5 -> t0 [label="" color="#8293A9" constraint=true penwidth=1.55 style=solid]
+	f4 -> t0 [label="" color="#8293A9" constraint=true penwidth=1.55 style=solid]
+	f0 -> t3 [label="" color="#8293A9" constraint=true penwidth=1.55 style=solid]
+	t3 -> r0 [label="" color="#8293A9" constraint=true penwidth=1.55 style=solid]
+	r4 -> f1 [label="" color="#8293A9" constraint=false penwidth=1.55 style=dashed]
+	r5 -> k1 [label="" color="#8293A9" constraint=false penwidth=1.55 style=dashed]
+}

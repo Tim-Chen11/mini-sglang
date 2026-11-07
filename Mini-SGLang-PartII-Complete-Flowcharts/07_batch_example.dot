@@ -1,0 +1,59 @@
+digraph batch {
+	bgcolor="#F9FBFF" compound=true fontcolor="#132238" fontname="Noto Sans CJK SC" fontsize=26 fontweight=bold label="额外实例 · 三个请求 A/B/C：同一个 Scheduler 如何连续组批（示意，不是固定时刻表）" labelloc=t nodesep=0.36 outputorder=edgesfirst pad=0.32 rankdir=LR ranksep=0.53 splines=spline
+	node [color="#64748B" fontcolor="#1E293B" fontname="Noto Sans CJK SC" fontsize=18 margin="0.18,0.13" penwidth=1.45 shape=box style="rounded,filled"]
+	edge [arrowsize=0.78 color="#94A3B8" fontcolor="#475569" fontname="Noto Sans CJK SC" fontsize=12 penwidth=1.6]
+	subgraph cluster_reqs {
+		color="#19669A" fillcolor="#FFFFFF" fontcolor="#19669A" fontname="Noto Sans CJK SC" fontsize=19 label="  3 个请求：独立状态  " labeljust=l labelloc=t margin=20 penwidth=1.5 style="rounded,filled"
+		ar [label="A：长 prompt
+需要 Chunked Prefill" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#19669A" fillcolor="#E6F3FF" shape=box target=_blank tooltip="A：长 prompt / 需要 Chunked Prefill | 第6章"]
+		br [label="B：短 prompt
+可以一次 Prefill" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#19669A" fillcolor="#E6F3FF" shape=box target=_blank tooltip="B：短 prompt / 可以一次 Prefill | 第6章"]
+		cr [label="C：与 A 命中共同前缀
+Radix 命中，extend_len 短" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC8%E7%AB%A0_RadixAttention%E4%B8%8E%E5%89%8D%E7%BC%80%E7%BC%93%E5%AD%98_%E4%BB%A3%E7%A0%81.md" color="#19669A" fillcolor="#E6F3FF" shape=box target=_blank tooltip="C：与 A 命中共同前缀 / Radix 命中，extend_len 短 | 第8章"]
+	}
+	subgraph cluster_ticks {
+		color="#6C44B1" fillcolor="#FFFFFF" fontcolor="#6C44B1" fontname="Noto Sans CJK SC" fontsize=19 label="  Scheduler 按轮重新组 Batch  " labeljust=l labelloc=t margin=20 penwidth=1.5 style="rounded,filled"
+		tick1 [label="Round 1
+Prefill A (chunk 1)
+仅建立一部分 KV，无输出" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#6C44B1" fillcolor="#F0EAFF" shape=box target=_blank tooltip="Round 1 / Prefill A (chunk 1) / 仅建立一部分 KV，无输出 | 第6章"]
+		tick2 [label="Round 2
+Prefill A (chunk 2)
+可处理 B 的 Prefill（受预算约束）" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#6C44B1" fillcolor="#F0EAFF" shape=box target=_blank tooltip="Round 2 / Prefill A (chunk 2) / 可处理 B 的 Prefill（受预算约束） | 第6章"]
+		tick3 [label="Round 3
+A / B 完整 Prefill 结束
+产生首 token，进入 running" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#6C44B1" fillcolor="#F0EAFF" shape=box target=_blank tooltip="Round 3 / A / B 完整 Prefill 结束 / 产生首 token，进入 running | 第6章"]
+		tick4 [label="Round 4
+Decode A + B
+C 新到达进入 pending" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#6C44B1" fillcolor="#F0EAFF" shape=box target=_blank tooltip="Round 4 / Decode A + B / C 新到达进入 pending | 第6章"]
+		tick5 [label="Round 5
+Prefill C：复用共同前缀
+输入有效 token 数减少" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC8%E7%AB%A0_RadixAttention%E4%B8%8E%E5%89%8D%E7%BC%80%E7%BC%93%E5%AD%98_%E4%BB%A3%E7%A0%81.md" color="#6C44B1" fillcolor="#F0EAFF" shape=box target=_blank tooltip="Round 5 / Prefill C：复用共同前缀 / 输入有效 token 数减少 | 第8章"]
+		tick6 [label="Round 6
+Decode A + B + C
+B 如果完成，立即移出" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#6C44B1" fillcolor="#F0EAFF" shape=box target=_blank tooltip="Round 6 / Decode A + B + C / B 如果完成，立即移出 | 第6章"]
+		tick7 [label="Round 7+
+只剩 A / C 继续 Decode
+空闲 slots 可接纳新请求" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#6C44B1" fillcolor="#F0EAFF" shape=box target=_blank tooltip="Round 7+ / 只剩 A / C 继续 Decode / 空闲 slots 可接纳新请求 | 第6章"]
+		tick1 -> tick2 [label="" color="#8293A9" penwidth=1.55]
+		tick2 -> tick3 [label="" color="#8293A9" penwidth=1.55]
+		tick3 -> tick4 [label="" color="#8293A9" penwidth=1.55]
+		tick4 -> tick5 [label="" color="#8293A9" penwidth=1.55]
+		tick5 -> tick6 [label="" color="#8293A9" penwidth=1.55]
+		tick6 -> tick7 [label="" color="#8293A9" penwidth=1.55]
+	}
+	subgraph cluster_implication {
+		color="#13855F" fillcolor="#FFFFFF" fontcolor="#13855F" fontname="Noto Sans CJK SC" fontsize=19 label="  为什么说是 Continuous Batching  " labeljust=l labelloc=t margin=20 penwidth=1.5 style="rounded,filled"
+		comp1 [label="每一轮 batch 都可能不同
+无需等 B 结束才能服务 C" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#13855F" fillcolor="#E6F8EF" shape=box target=_blank tooltip="每一轮 batch 都可能不同 / 无需等 B 结束才能服务 C | 第6章"]
+		comp2 [label="动态选择 prefill / decode
+而不是固定 batch 永远绑死" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#13855F" fillcolor="#E6F8EF" shape=box target=_blank tooltip="动态选择 prefill / decode / 而不是固定 batch 永远绑死 | 第6章"]
+		comp3 [label="不同请求仍有独立 uid、KV 映射、停止条件
+固定模型权重在 batch 内共享" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#13855F" fillcolor="#E6F8EF" shape=box target=_blank tooltip="不同请求仍有独立 uid、KV 映射、停止条件 / 固定模型权重在 batch 内共享 | 第6章"]
+		comp1 -> comp2 [label="" color="#8293A9" penwidth=1.55]
+		comp2 -> comp3 [label="" color="#8293A9" penwidth=1.55]
+	}
+	ar -> tick1 [label="" color="#8293A9" penwidth=1.55]
+	br -> tick2 [label="" color="#8293A9" penwidth=1.55]
+	cr -> tick5 [label="" color="#8293A9" penwidth=1.55]
+	tick7 -> comp1 [label="" color="#8293A9" penwidth=1.55]
+}

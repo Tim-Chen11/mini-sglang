@@ -1,0 +1,77 @@
+digraph spec {
+	bgcolor="#F9FBFF" compound=true fontcolor="#132238" fontname="Noto Sans CJK SC" fontsize=26 fontweight=bold label="详图 E · Speculative Decoding：Draft → Verify → Accept / Reject（第 10 章，SGLang 扩展）" labelloc=t nodesep=0.31 outputorder=edgesfirst pad=0.32 rankdir=TB ranksep=0.48 splines=spline
+	node [color="#64748B" fontcolor="#1E293B" fontname="Noto Sans CJK SC" fontsize=18 margin="0.18,0.13" penwidth=1.45 shape=box style="rounded,filled"]
+	edge [arrowsize=0.78 color="#94A3B8" fontcolor="#475569" fontname="Noto Sans CJK SC" fontsize=12 penwidth=1.6]
+	subgraph cluster_premise {
+		color="#00877B" fillcolor="#FFFFFF" fontcolor="#00877B" fontname="Noto Sans CJK SC" fontsize=19 label="  前置条件与状态  " labeljust=l labelloc=t margin=20 penwidth=1.5 style="rounded,filled"
+		t0 [label="当前已确认前缀 P
+Target 大模型已准备 KV
+Draft 小模型有独立状态" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC10%E7%AB%A0_%E6%8A%95%E6%9C%BA%E8%A7%A3%E7%A0%81_%E4%BB%A3%E7%A0%81.md" color="#00877B" fillcolor="#DCF6F2" shape=box target=_blank tooltip="当前已确认前缀 P / Target 大模型已准备 KV / Draft 小模型有独立状态 | 第10章"]
+		t1 [label="两模型 token ID / 词表语义兼容
+本轮仍有 remaining token 配额" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC10%E7%AB%A0_%E6%8A%95%E6%9C%BA%E8%A7%A3%E7%A0%81_%E4%BB%A3%E7%A0%81.md" color="#00877B" fillcolor="#DCF6F2" shape=box target=_blank tooltip="两模型 token ID / 词表语义兼容 / 本轮仍有 remaining token 配额 | 第10章"]
+		t2 [label="Draft 自回归连续提出 k 个候选
+[y1, y2, ..., yk]
+候选不是正式输出！" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC10%E7%AB%A0_%E6%8A%95%E6%9C%BA%E8%A7%A3%E7%A0%81_%E4%BB%A3%E7%A0%81.md" color="#00877B" fillcolor="#DCF6F2" shape=box target=_blank tooltip="Draft 自回归连续提出 k 个候选 / [y1, y2, ..., yk] / 候选不是正式输出！ | 第10章"]
+		t3 [label="构造 VerifyInput
+候选 IDs / positions / masks / indices
+随机方案还需要 q_i 概率" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC10%E7%AB%A0_%E6%8A%95%E6%9C%BA%E8%A7%A3%E7%A0%81_%E4%BB%A3%E7%A0%81.md" color="#00877B" fillcolor="#DCF6F2" shape=box target=_blank tooltip="构造 VerifyInput / 候选 IDs / positions / masks / indices / 随机方案还需要 q_i 概率 | 第10章"]
+		t4 [label="Target 一次并行验证候选
+因果 Attention 保证每行只看此前文
+得到 k 个位置预测 + 可能的 bonus 预测" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC10%E7%AB%A0_%E6%8A%95%E6%9C%BA%E8%A7%A3%E7%A0%81_%E4%BB%A3%E7%A0%81.md" color="#13855F" fillcolor="#E6F8EF" shape=box target=_blank tooltip="Target 一次并行验证候选 / 因果 Attention 保证每行只看此前文 / 得到 k 个位置预测 + 可能的 bonus 预测 | 第10章"]
+		t0 -> t1 [label="" color="#8293A9" penwidth=1.55]
+		t1 -> t2 [label="" color="#8293A9" penwidth=1.55]
+		t2 -> t3 [label="" color="#8293A9" penwidth=1.55]
+		t3 -> t4 [label="" color="#8293A9" penwidth=1.55]
+	}
+	subgraph cluster_choice {
+		color="#A87910" fillcolor="#FFFFFF" fontcolor="#A87910" fontname="Noto Sans CJK SC" fontsize=19 label="  两条验证策略  " labeljust=l labelloc=t margin=20 penwidth=1.5 style="rounded,filled"
+		c0 [label="目标模型原始解码策略？" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC10%E7%AB%A0_%E6%8A%95%E6%9C%BA%E8%A7%A3%E7%A0%81_%E4%BB%A3%E7%A0%81.md" color="#A87910" fillcolor="#FFF6D5" shape=diamond target=_blank tooltip="目标模型原始解码策略？ | 第10章"]
+		c1 [label="Greedy 验证
+逐位置比较 draft token
+与 target argmax" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC10%E7%AB%A0_%E6%8A%95%E6%9C%BA%E8%A7%A3%E7%A0%81_%E4%BB%A3%E7%A0%81.md" color="#00877B" fillcolor="#DCF6F2" shape=box target=_blank tooltip="Greedy 验证 / 逐位置比较 draft token / 与 target argmax | 第10章"]
+		c2 [label="Stochastic 验证
+p_i = Target 实际采样分布
+q_i = Draft 实际采样分布" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC10%E7%AB%A0_%E6%8A%95%E6%9C%BA%E8%A7%A3%E7%A0%81_%E4%BB%A3%E7%A0%81.md" color="#00877B" fillcolor="#DCF6F2" shape=box target=_blank tooltip="Stochastic 验证 / p_i = Target 实际采样分布 / q_i = Draft 实际采样分布 | 第10章"]
+		c3 [label="对候选 y：
+α=min(1, p(y)/q(y))
+概率 α 接受" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC10%E7%AB%A0_%E6%8A%95%E6%9C%BA%E8%A7%A3%E7%A0%81_%E4%BB%A3%E7%A0%81.md" color="#00877B" fillcolor="#DCF6F2" shape=box target=_blank tooltip="对候选 y： / α=min(1, p(y)/q(y)) / 概率 α 接受 | 第10章"]
+		c4 [label="接受了多少个连续草稿？" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC10%E7%AB%A0_%E6%8A%95%E6%9C%BA%E8%A7%A3%E7%A0%81_%E4%BB%A3%E7%A0%81.md" color="#A87910" fillcolor="#FFF6D5" shape=diamond target=_blank tooltip="接受了多少个连续草稿？ | 第10章"]
+		c0 -> c1 [label="贪心" color="#8293A9" penwidth=1.55]
+		c0 -> c2 [label="随机" color="#8293A9" penwidth=1.55]
+		c2 -> c3 [label="" color="#8293A9" penwidth=1.55]
+		c1 -> c4 [label="" color="#8293A9" penwidth=1.55]
+		c3 -> c4 [label="" color="#8293A9" penwidth=1.55]
+	}
+	subgraph cluster_commit {
+		color="#00877B" fillcolor="#FFFFFF" fontcolor="#00877B" fontname="Noto Sans CJK SC" fontsize=19 label="  第一次拒绝处停止；只提交真实已确认 token  " labeljust=l labelloc=t margin=20 penwidth=1.5 style="rounded,filled"
+		q0 [label="首次不匹配 / 拒绝
+只保留之前连续接受的 a 个候选" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC10%E7%AB%A0_%E6%8A%95%E6%9C%BA%E8%A7%A3%E7%A0%81_%E4%BB%A3%E7%A0%81.md" color="#00877B" fillcolor="#DCF6F2" shape=box target=_blank tooltip="首次不匹配 / 拒绝 / 只保留之前连续接受的 a 个候选 | 第10章"]
+		q1 [label="Greedy：提交目标 argmax 纠正 token
+随机：从 normalized max(p-q,0) 抽样
+丢弃后续所有草稿" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC10%E7%AB%A0_%E6%8A%95%E6%9C%BA%E8%A7%A3%E7%A0%81_%E4%BB%A3%E7%A0%81.md" color="#00877B" fillcolor="#DCF6F2" shape=box target=_blank tooltip="Greedy：提交目标 argmax 纠正 token / 随机：从 normalized max(p-q,0) 抽样 / 丢弃后续所有草稿 | 第10章"]
+		q2 [label="全部 k 个被接受
+用 Target 最后一行采样
+再提交 1 个 bonus token" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC10%E7%AB%A0_%E6%8A%95%E6%9C%BA%E8%A7%A3%E7%A0%81_%E4%BB%A3%E7%A0%81.md" color="#00877B" fillcolor="#DCF6F2" shape=box target=_blank tooltip="全部 k 个被接受 / 用 Target 最后一行采样 / 再提交 1 个 bonus token | 第10章"]
+		q3 [label="本轮通常提交 a+1 个 token
+最多 k+1；必须截断到 remaining" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC10%E7%AB%A0_%E6%8A%95%E6%9C%BA%E8%A7%A3%E7%A0%81_%E4%BB%A3%E7%A0%81.md" color="#00877B" fillcolor="#DCF6F2" shape=box target=_blank tooltip="本轮通常提交 a+1 个 token / 最多 k+1；必须截断到 remaining | 第10章"]
+		q4 [label="遇到正式确认的 EOS?
+或 max_tokens 额度耗尽?" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC10%E7%AB%A0_%E6%8A%95%E6%9C%BA%E8%A7%A3%E7%A0%81_%E4%BB%A3%E7%A0%81.md" color="#A87910" fillcolor="#FFF6D5" shape=diamond target=_blank tooltip="遇到正式确认的 EOS? / 或 max_tokens 额度耗尽? | 第10章"]
+		q5 [label="接受路径 KV 与 Draft 状态同步
+丢弃拒绝候选对应的缓存
+新纠正/bonus token 的 KV 留待下轮" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC10%E7%AB%A0_%E6%8A%95%E6%9C%BA%E8%A7%A3%E7%A0%81_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="接受路径 KV 与 Draft 状态同步 / 丢弃拒绝候选对应的缓存 / 新纠正/bonus token 的 KV 留待下轮 | 第10章"]
+		q6 [label="停止生成 / 输出 finished" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC10%E7%AB%A0_%E6%8A%95%E6%9C%BA%E8%A7%A3%E7%A0%81_%E4%BB%A3%E7%A0%81.md" color="#19669A" fillcolor="#E6F3FF" shape=box target=_blank tooltip="停止生成 / 输出 finished | 第10章"]
+		q7 [label="以新确认前缀重新 Draft
+进入下一轮推测" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC10%E7%AB%A0_%E6%8A%95%E6%9C%BA%E8%A7%A3%E7%A0%81_%E4%BB%A3%E7%A0%81.md" color="#00877B" fillcolor="#DCF6F2" shape=box target=_blank tooltip="以新确认前缀重新 Draft / 进入下一轮推测 | 第10章"]
+		q0 -> q1 [label="" color="#8293A9" penwidth=1.55]
+		q1 -> q3 [label="" color="#8293A9" penwidth=1.55]
+		q2 -> q3 [label="" color="#8293A9" penwidth=1.55]
+		q3 -> q4 [label="" color="#8293A9" penwidth=1.55]
+		q4 -> q5 [label="否" color="#8293A9" penwidth=1.55]
+		q4 -> q6 [label="是" color="#8293A9" penwidth=1.55]
+		q5 -> q7 [label="" color="#8293A9" penwidth=1.55]
+		q7 -> t2 [label="" color="#8293A9" constraint=false penwidth=1.55 style=dashed]
+	}
+	t4 -> c0 [label="" color="#8293A9" penwidth=1.55]
+	c4 -> q0 [label="部分接受" color="#00877B" penwidth=1.55]
+	c4 -> q2 [label="全部接受" color="#00877B" penwidth=1.55]
+}

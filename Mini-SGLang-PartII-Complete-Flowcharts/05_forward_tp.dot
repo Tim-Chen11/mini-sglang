@@ -1,0 +1,85 @@
+digraph forward {
+	bgcolor="#F9FBFF" compound=true fontcolor="#132238" fontname="Noto Sans CJK SC" fontsize=26 fontweight=bold label="详图 D · Qwen3 Forward、KV 读写与 Tensor Parallel（Ch3 / 4 / 9）" labelloc=t nodesep=0.30 outputorder=edgesfirst pad=0.32 rankdir=LR ranksep=0.53 splines=spline
+	node [color="#64748B" fontcolor="#1E293B" fontname="Noto Sans CJK SC" fontsize=17 margin="0.18,0.13" penwidth=1.45 shape=box style="rounded,filled"]
+	edge [arrowsize=0.78 color="#94A3B8" fontcolor="#475569" fontname="Noto Sans CJK SC" fontsize=12 penwidth=1.6]
+	subgraph cluster_part {
+		color="#AD4683" fillcolor="#FFFFFF" fontcolor="#AD4683" fontname="Noto Sans CJK SC" fontsize=19 label="  进程 / 权重 / 数据切分（TP size = N）  " labeljust=l labelloc=t margin=20 penwidth=1.5 style="rounded,filled"
+		w0 [label="同一 Batch：所有 TP rank
+接收同序消息 / 本地状态一致" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC9%E7%AB%A0_%E5%A4%9A%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%BC%A0%E9%87%8F%E5%B9%B6%E8%A1%8C_%E4%BB%A3%E7%A0%81.md" color="#AD4683" fillcolor="#FCE7F3" shape=box target=_blank tooltip="同一 Batch：所有 TP rank / 接收同序消息 / 本地状态一致 | 第9章"]
+		w1 [label="每 rank 一个 Engine
+set_tp_info(rank,size)
+加载局部 weight shard" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC9%E7%AB%A0_%E5%A4%9A%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%BC%A0%E9%87%8F%E5%B9%B6%E8%A1%8C_%E4%BB%A3%E7%A0%81.md" color="#AD4683" fillcolor="#FCE7F3" shape=box target=_blank tooltip="每 rank 一个 Engine / set_tp_info(rank,size) / 加载局部 weight shard | 第9章"]
+		w2 [label="CPU 控制同步：Gloo
+GPU 集合通信：PyNCCL / NCCL
+单卡则无跨卡通信" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC9%E7%AB%A0_%E5%A4%9A%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%BC%A0%E9%87%8F%E5%B9%B6%E8%A1%8C_%E4%BB%A3%E7%A0%81.md" color="#AD4683" fillcolor="#FCE7F3" shape=box target=_blank tooltip="CPU 控制同步：Gloo / GPU 集合通信：PyNCCL / NCCL / 单卡则无跨卡通信 | 第9章"]
+		w0 -> w1 [label="" color="#8293A9" penwidth=1.55]
+		w1 -> w2 [label="" color="#8293A9" penwidth=1.55]
+	}
+	subgraph cluster_model {
+		color="#13855F" fillcolor="#FFFFFF" fontcolor="#13855F" fontname="Noto Sans CJK SC" fontsize=19 label="  一轮 Forward（Prefill / Decode 共用 Layer）  " labeljust=l labelloc=t margin=20 penwidth=1.5 style="rounded,filled"
+		m0 [label="Batch.input_ids + positions
+Prefill: extend_len>1
+Decode: 每 Req 通常 1" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC3%E7%AB%A0_%E5%89%8D%E5%90%91%E4%B8%8E%E7%94%9F%E6%88%90_%E4%BB%A3%E7%A0%81.md" color="#13855F" fillcolor="#E6F8EF" shape=box target=_blank tooltip="Batch.input_ids + positions / Prefill: extend_len>1 / Decode: 每 Req 通常 1 | 第3章"]
+		m1 [label="VocabParallelEmbedding
+查 token embedding → Hidden X" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC9%E7%AB%A0_%E5%A4%9A%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%BC%A0%E9%87%8F%E5%B9%B6%E8%A1%8C_%E4%BB%A3%E7%A0%81.md" color="#13855F" fillcolor="#E6F8EF" shape=box target=_blank tooltip="VocabParallelEmbedding / 查 token embedding → Hidden X | 第9章"]
+		m2 [label="Fused RMSNorm + Residual
+每层第一处 norm" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC3%E7%AB%A0_%E5%89%8D%E5%90%91%E4%B8%8E%E7%94%9F%E6%88%90_%E4%BB%A3%E7%A0%81.md" color="#13855F" fillcolor="#E6F8EF" shape=box target=_blank tooltip="Fused RMSNorm + Residual / 每层第一处 norm | 第3章"]
+		m3 [label="QKV Projection
+Column Parallel / 按 head 切分" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC9%E7%AB%A0_%E5%A4%9A%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%BC%A0%E9%87%8F%E5%B9%B6%E8%A1%8C_%E4%BB%A3%E7%A0%81.md" color="#AD4683" fillcolor="#FCE7F3" shape=box target=_blank tooltip="QKV Projection / Column Parallel / 按 head 切分 | 第9章"]
+		m4 [label="Q/K RMSNorm + RoPE
+GQA: Hq > Hkv
+不同 Q 头共享 KV heads" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC3%E7%AB%A0_%E5%89%8D%E5%90%91%E4%B8%8E%E7%94%9F%E6%88%90_%E4%BB%A3%E7%A0%81.md" color="#13855F" fillcolor="#E6F8EF" shape=box target=_blank tooltip="Q/K RMSNorm + RoPE / GQA: Hq > Hkv / 不同 Q 头共享 KV heads | 第3章"]
+		m5 [label="KV Cache.store_kv(K,V,out_loc)
+本 layer 将新 token K/V 写入显存" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC4%E7%AB%A0_KVCache%E4%BC%98%E5%8C%96_%E4%BB%A3%E7%A0%81.md" color="#A65D13" fillcolor="#FFF0DB" shape=box target=_blank tooltip="KV Cache.store_kv(K,V,out_loc) / 本 layer 将新 token K/V 写入显存 | 第4章"]
+		m6 [label="Causal Attention
+读取历史 KV（Page Table）
+只看当前及以前 token" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC4%E7%AB%A0_KVCache%E4%BC%98%E5%8C%96_%E4%BB%A3%E7%A0%81.md" color="#13855F" fillcolor="#E6F8EF" shape=box target=_blank tooltip="Causal Attention / 读取历史 KV（Page Table） / 只看当前及以前 token | 第4章"]
+		m7 [label="O Projection（Row Parallel）
+All-Reduce 合并 TP 局部结果
++ Residual" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC9%E7%AB%A0_%E5%A4%9A%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%BC%A0%E9%87%8F%E5%B9%B6%E8%A1%8C_%E4%BB%A3%E7%A0%81.md" color="#AD4683" fillcolor="#FCE7F3" shape=box target=_blank tooltip="O Projection（Row Parallel） / All-Reduce 合并 TP 局部结果 / + Residual | 第9章"]
+		m8 [label="RMSNorm → GatedMLP
+Gate/Up Column Parallel
+SiLU(gate) * up" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC3%E7%AB%A0_%E5%89%8D%E5%90%91%E4%B8%8E%E7%94%9F%E6%88%90_%E4%BB%A3%E7%A0%81.md" color="#13855F" fillcolor="#E6F8EF" shape=box target=_blank tooltip="RMSNorm → GatedMLP / Gate/Up Column Parallel / SiLU(gate) * up | 第3章"]
+		m9 [label="Down Projection Row Parallel
+All-Reduce + Residual" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC9%E7%AB%A0_%E5%A4%9A%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%BC%A0%E9%87%8F%E5%B9%B6%E8%A1%8C_%E4%BB%A3%E7%A0%81.md" color="#AD4683" fillcolor="#FCE7F3" shape=box target=_blank tooltip="Down Projection Row Parallel / All-Reduce + Residual | 第9章"]
+		m10 [label="下一 Decoder Layer ?" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC3%E7%AB%A0_%E5%89%8D%E5%90%91%E4%B8%8E%E7%94%9F%E6%88%90_%E4%BB%A3%E7%A0%81.md" color="#A87910" fillcolor="#FFF6D5" shape=diamond target=_blank tooltip="下一 Decoder Layer ? | 第3章"]
+		m11 [label="Final RMSNorm
+每请求选最后预测位置" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC3%E7%AB%A0_%E5%89%8D%E5%90%91%E4%B8%8E%E7%94%9F%E6%88%90_%E4%BB%A3%E7%A0%81.md" color="#13855F" fillcolor="#E6F8EF" shape=box target=_blank tooltip="Final RMSNorm / 每请求选最后预测位置 | 第3章"]
+		m12 [label="Parallel LM Head → logits [B,V]
+不同 rank 可参与词表采样" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC9%E7%AB%A0_%E5%A4%9A%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%BC%A0%E9%87%8F%E5%B9%B6%E8%A1%8C_%E4%BB%A3%E7%A0%81.md" color="#13855F" fillcolor="#E6F8EF" shape=box target=_blank tooltip="Parallel LM Head → logits [B,V] / 不同 rank 可参与词表采样 | 第9章"]
+		m13 [label="Sampler: greedy / temp / top-k / top-p
+选择下一 token id" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC3%E7%AB%A0_%E5%89%8D%E5%90%91%E4%B8%8E%E7%94%9F%E6%88%90_%E4%BB%A3%E7%A0%81.md" color="#13855F" fillcolor="#E6F8EF" shape=box target=_blank tooltip="Sampler: greedy / temp / top-k / top-p / 选择下一 token id | 第3章"]
+		m0 -> m1 [label="" color="#8293A9" penwidth=1.55]
+		m1 -> m2 [label="" color="#8293A9" penwidth=1.55]
+		m2 -> m3 [label="" color="#8293A9" penwidth=1.55]
+		m3 -> m4 [label="" color="#8293A9" penwidth=1.55]
+		m4 -> m5 [label="" color="#8293A9" penwidth=1.55]
+		m5 -> m6 [label="" color="#8293A9" penwidth=1.55]
+		m6 -> m7 [label="" color="#8293A9" penwidth=1.55]
+		m7 -> m8 [label="" color="#8293A9" penwidth=1.55]
+		m8 -> m9 [label="" color="#8293A9" penwidth=1.55]
+		m9 -> m10 [label="" color="#8293A9" penwidth=1.55]
+		m10 -> m11 [label="" color="#8293A9" penwidth=1.55]
+		m11 -> m12 [label="" color="#8293A9" penwidth=1.55]
+		m12 -> m13 [label="" color="#8293A9" penwidth=1.55]
+		m10 -> m2 [label="还有 layers" color="#8293A9" constraint=false penwidth=1.55 style=dashed]
+	}
+	subgraph cluster_cycle {
+		color="#6C44B1" fillcolor="#FFFFFF" fontcolor="#6C44B1" fontname="Noto Sans CJK SC" fontsize=19 label="  自回归循环：生成 token 与 KV 状态错位一拍  " labeljust=l labelloc=t margin=20 penwidth=1.5 style="rounded,filled"
+		z0 [label="Prefill 已计算 prompt 的 K/V
+首次 logits 预测 y1" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC4%E7%AB%A0_KVCache%E4%BC%98%E5%8C%96_%E4%BB%A3%E7%A0%81.md" color="#6C44B1" fillcolor="#F0EAFF" shape=box target=_blank tooltip="Prefill 已计算 prompt 的 K/V / 首次 logits 预测 y1 | 第4章"]
+		z1 [label="Sample y1 → 追加 token id
+注意 y1 的 K/V 尚未产生" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC4%E7%AB%A0_KVCache%E4%BC%98%E5%8C%96_%E4%BB%A3%E7%A0%81.md" color="#6C44B1" fillcolor="#F0EAFF" shape=box target=_blank tooltip="Sample y1 → 追加 token id / 注意 y1 的 K/V 尚未产生 | 第4章"]
+		z2 [label="下轮 Decode 输入 y1
+算出 K(y1)/V(y1) 并写缓存
+logits 再预测 y2" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC4%E7%AB%A0_KVCache%E4%BC%98%E5%8C%96_%E4%BB%A3%E7%A0%81.md" color="#6C44B1" fillcolor="#F0EAFF" shape=box target=_blank tooltip="下轮 Decode 输入 y1 / 算出 K(y1)/V(y1) 并写缓存 / logits 再预测 y2 | 第4章"]
+		z3 [label="不断迭代 → EOS / max_tokens
+或者返回到 Scheduler 再组批" URL="https://github.com/datawhalechina/zero-to-sglang/blob/main/course-material/ch/part2/%E7%AC%AC6%E7%AB%A0_ContinuousBatching%E4%B8%8E%E8%B0%83%E5%BA%A6_%E4%BB%A3%E7%A0%81.md" color="#6C44B1" fillcolor="#F0EAFF" shape=box target=_blank tooltip="不断迭代 → EOS / max_tokens / 或者返回到 Scheduler 再组批 | 第6章"]
+		z0 -> z1 [label="" color="#8293A9" penwidth=1.55]
+		z1 -> z2 [label="" color="#8293A9" penwidth=1.55]
+		z2 -> z3 [label="" color="#8293A9" penwidth=1.55]
+	}
+	w2 -> m0 [label="" color="#8293A9" penwidth=1.55]
+	m13 -> z0 [label="" color="#8293A9" penwidth=1.55]
+	z2 -> m0 [label="" color="#8293A9" constraint=false penwidth=1.55 style=dashed]
+}
